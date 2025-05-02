@@ -46,6 +46,7 @@ export const generateQRCode = asyncHandler(async (req: AuthRequest, res: Respons
     logger.info(`QR code generation already active for sectionId=${sectionIdStr}, sectionNumber=${section.sectionNumber}`);
     const firstCode = await Code.findOne({ sectionId: section._id, isActive: true });
     if (firstCode) {
+      // TODO: SHOULD RETURN THE QR CODE (CODE ONL)
       const qrImage = await QRCode.toDataURL(
         `${process.env.API_BASE_URL || 'http://localhost:3000'}/api/attendance/verify/${firstCode.code}`
       );

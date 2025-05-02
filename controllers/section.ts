@@ -201,25 +201,26 @@ export const addStudentsToSection = asyncHandler(async (req: AuthRequest, res: R
     throw new AppError('Some students are not enrolled in this class', 403);
   }
 
-  // Check if students are already in other sections
-  const otherSections = await Section.find({
-    classId: section.classId,
-    _id: { $ne: sectionId },
-    students: { $in: studentObjectIds },
-  });
-  if (otherSections.length > 0) {
-    const duplicateStudents = students
-      .filter((s) =>
-        otherSections.some((sec) =>
-          sec.students.some((id) => id.toString() === s._id.toString())
-        )
-      )
-      .map((s) => s._id.toString());
-    throw new AppError(
-      `Students with IDs ${duplicateStudents.join(', ')} are already in other sections`,
-      400
-    );
-  }
+  // TODO: REMOVE THIS BLOCK THE ADMIN TO BUT STUDENTS IN OTHER SECTIONS
+  // // Check if students are already in other sections
+  // const otherSections = await Section.find({
+  //   classId: section.classId,
+  //   _id: { $ne: sectionId },
+  //   students: { $in: studentObjectIds },
+  // });
+  // if (otherSections.length > 0) {
+  //   const duplicateStudents = students
+  //     .filter((s) =>
+  //       otherSections.some((sec) =>
+  //         sec.students.some((id) => id.toString() === s._id.toString())
+  //       )
+  //     )
+  //     .map((s) => s._id.toString());
+  //   throw new AppError(
+  //     `Students with IDs ${duplicateStudents.join(', ')} are already in other sections`,
+  //     400
+  //   );
+  // }
 
   // Add new students to the section
   const newStudents = studentObjectIds.filter(
