@@ -9,7 +9,8 @@ const objectIdSchema = z
 export const createSectionSchema = z.object({
   body: z.object({
     classId: objectIdSchema,
-    sectionName: z.string().nonempty('Section name cannot be empty'),
+    sectionNumber: z.string().nonempty('Section number cannot be empty'), // Changed from number to string
+    dayNumber: z.number().min(1).optional(),
     studentIds: z.array(objectIdSchema).optional(),
   }),
 });
@@ -17,7 +18,8 @@ export const createSectionSchema = z.object({
 export const updateSectionSchema = z.object({
   body: z.object({
     sectionId: objectIdSchema,
-    sectionName: z.string().nonempty('Section name cannot be empty').optional(),
+    sectionNumber: z.string().nonempty('Section number cannot be empty').optional(), // Changed from number to string
+    dayNumber: z.number().min(1).optional(),
     studentIds: z.array(objectIdSchema).optional(),
   }),
 });

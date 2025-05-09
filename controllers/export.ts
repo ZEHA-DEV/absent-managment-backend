@@ -24,7 +24,7 @@ interface ClassDocument extends Document {
 
 interface SectionDocument extends Document {
   _id: Types.ObjectId;
-  sectionNumber: number;
+  sectionNumber: string; // Changed from number to string
   students?: Types.ObjectId[];
 }
 

@@ -10,7 +10,7 @@ import mongoose from 'mongoose';
 
 export const createSection = asyncHandler(async (req: AuthRequest, res: Response) => {
   try {
-    const { classId, sectionName, studentIds } = req.body;
+    const { classId, sectionNumber, studentIds, dayNumber } = req.body;
     const userId = req.user!.id;
     const userRole = req.user!.role;
 
@@ -28,7 +28,7 @@ export const createSection = asyncHandler(async (req: AuthRequest, res: Response
     }
 
     // Check for duplicate section
-    const existingSection = await Section.findOne({ classId, sectionName });
+    const existingSection = await Section.findOne({ classId, sectionNumber });
     if (existingSection) {
       throw new Error();
     }
@@ -65,9 +65,10 @@ export const createSection = asyncHandler(async (req: AuthRequest, res: Response
 
     const newSection = await Section.create({
       classId,
-      sectionName,
+      sectionNumber, // This now accepts a string instead of a number
       students: studentObjectIds,
       date: new Date(),
+      dayNumber,
     });
 
     logger.info(`Section created: sectionId=${newSection._id}, classId=${classId}`);
@@ -146,10 +147,11 @@ export const getMySections = asyncHandler(async (req: AuthRequest, res: Response
   // Transform sections to include className and relevant fields
   const sectionsWithDetails = sections.map((section: any) => ({
     _id: section._id,
-    sectionName: section.sectionName,
+    sectionNumber: section.sectionNumber, // This will now be a string
     classId: section.classId._id,
     className: section.classId.name,
     date: section.date,
+    dayNumber: section.dayNumber,
     students: userRole === UserRole.STUDENT ? undefined : section.students, // Hide students for students
     createdAt: section.createdAt,
     updatedAt: section.updatedAt,
@@ -199,6 +201,8 @@ export const addStudentsToSection = asyncHandler(async (req: AuthRequest, res: R
     throw new AppError('Some students are not enrolled in this class', 403);
   }
 
+  // TODO: REMOVE THIS BLOCK THE ADMIN TO BUT STUDENTS IN OTHER SECTIONS
+  // // Check if students are already in other sections
   const otherSections = await Section.find({
     classId: section.classId,
     _id: { $ne: sectionId },
