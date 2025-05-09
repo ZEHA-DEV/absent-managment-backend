@@ -7,10 +7,9 @@ import { User, UserRole } from '../models/user';
 import logger from '../utils/logger';
 import { Response } from 'express';
 import mongoose from 'mongoose';
-
 export const createSection = asyncHandler(async (req: AuthRequest, res: Response) => {
   try {
-    const { classId, sectionNumber, studentIds, dayNumber } = req.body;
+    const { classId, sectionName, studentIds } = req.body;
     const userId = req.user!.id;
     const userRole = req.user!.role;
 
@@ -27,8 +26,11 @@ export const createSection = asyncHandler(async (req: AuthRequest, res: Response
       throw new Error();
     }
 
-    // Check for duplicate section
-    const existingSection = await Section.findOne({ classId, sectionNumber });
+    // Check for duplicate section name (case-insensitive, trimmed)
+    const existingSection = await Section.findOne({
+      classId,
+      sectionName: { $regex: new RegExp(`^${sectionName.trim()}$`, 'i') },
+    });
     if (existingSection) {
       throw new Error();
     }
@@ -65,10 +67,9 @@ export const createSection = asyncHandler(async (req: AuthRequest, res: Response
 
     const newSection = await Section.create({
       classId,
-      sectionNumber,
+      sectionName: sectionName.trim(),
       students: studentObjectIds,
       date: new Date(),
-      dayNumber,
     });
 
     logger.info(`Section created: sectionId=${newSection._id}, classId=${classId}`);
@@ -84,7 +85,6 @@ export const createSection = asyncHandler(async (req: AuthRequest, res: Response
     });
   }
 });
-
 export const deleteSection = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { sectionId } = req.body;
   const userId = req.user!.id;
@@ -201,26 +201,24 @@ export const addStudentsToSection = asyncHandler(async (req: AuthRequest, res: R
     throw new AppError('Some students are not enrolled in this class', 403);
   }
 
-  // TODO: REMOVE THIS BLOCK THE ADMIN TO BUT STUDENTS IN OTHER SECTIONS
-  // // Check if students are already in other sections
-  // const otherSections = await Section.find({
-  //   classId: section.classId,
-  //   _id: { $ne: sectionId },
-  //   students: { $in: studentObjectIds },
-  // });
-  // if (otherSections.length > 0) {
-  //   const duplicateStudents = students
-  //     .filter((s) =>
-  //       otherSections.some((sec) =>
-  //         sec.students.some((id) => id.toString() === s._id.toString())
-  //       )
-  //     )
-  //     .map((s) => s._id.toString());
-  //   throw new AppError(
-  //     `Students with IDs ${duplicateStudents.join(', ')} are already in other sections`,
-  //     400
-  //   );
-  // }
+  const otherSections = await Section.find({
+    classId: section.classId,
+    _id: { $ne: sectionId },
+    students: { $in: studentObjectIds },
+  });
+  if (otherSections.length > 0) {
+    const duplicateStudents = students
+      .filter((s) =>
+        otherSections.some((sec) =>
+          sec.students.some((id) => id.toString() === s._id.toString())
+        )
+      )
+      .map((s) => s._id.toString());
+    throw new AppError(
+      `Students with IDs ${duplicateStudents.join(', ')} are already in other sections`,
+      400
+    );
+  }
 
   // Add new students to the section
   const newStudents = studentObjectIds.filter(

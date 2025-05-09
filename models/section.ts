@@ -2,10 +2,9 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISection extends Document {
   classId: mongoose.Types.ObjectId;
-  sectionNumber: number;
+  sectionName: string;
   students: mongoose.Types.ObjectId[];
   date: Date;
-  dayNumber?: number;
 }
 
 const sectionSchema = new Schema<ISection>(
@@ -15,9 +14,10 @@ const sectionSchema = new Schema<ISection>(
       ref: 'Class',
       required: true,
     },
-    sectionNumber: {
-      type: Number,
+    sectionName: {
+      type: String,
       required: true,
+      trim: true,
     },
     students: [
       {
@@ -29,16 +29,12 @@ const sectionSchema = new Schema<ISection>(
       type: Date,
       required: true,
     },
-  dayNumber: {
-    type: Number,
-    required: false,
-  },
   },
   { timestamps: true }
 );
 
-// Unique index to prevent duplicate sectionNumber within the same classId
-sectionSchema.index({ classId: 1, sectionNumber: 1 }, { unique: true });
+// Unique index to prevent duplicate sectionName within the same classId
+sectionSchema.index({ classId: 1, sectionName: 1 }, { unique: true });
 sectionSchema.index({ classId: 1, students: 1 });
 
 export const Section = mongoose.model<ISection>('Section', sectionSchema);
