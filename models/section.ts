@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISection extends Document {
   classId: mongoose.Types.ObjectId;
-  sectionName: string;
+  sectionName: string; 
   students: mongoose.Types.ObjectId[];
   date: Date;
 }
@@ -14,10 +14,9 @@ const sectionSchema = new Schema<ISection>(
       ref: 'Class',
       required: true,
     },
-    sectionName: {
-      type: String,
+    sectionName: { 
+      type: String, 
       required: true,
-      trim: true,
     },
     students: [
       {
@@ -33,7 +32,6 @@ const sectionSchema = new Schema<ISection>(
   { timestamps: true }
 );
 
-// Unique index to prevent duplicate sectionName within the same classId
 sectionSchema.index({ classId: 1, sectionName: 1 }, { unique: true });
 sectionSchema.index({ classId: 1, students: 1 });
 

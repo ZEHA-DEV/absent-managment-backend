@@ -7,6 +7,7 @@ import { User, UserRole } from '../models/user';
 import logger from '../utils/logger';
 import { Response } from 'express';
 import mongoose from 'mongoose';
+
 export const createSection = asyncHandler(async (req: AuthRequest, res: Response) => {
   try {
     const { classId, sectionName, studentIds } = req.body;
@@ -26,11 +27,8 @@ export const createSection = asyncHandler(async (req: AuthRequest, res: Response
       throw new Error();
     }
 
-    // Check for duplicate section name (case-insensitive, trimmed)
-    const existingSection = await Section.findOne({
-      classId,
-      sectionName: { $regex: new RegExp(`^${sectionName.trim()}$`, 'i') },
-    });
+    // Check for duplicate section
+    const existingSection = await Section.findOne({ classId, sectionName });
     if (existingSection) {
       throw new Error();
     }
@@ -67,7 +65,7 @@ export const createSection = asyncHandler(async (req: AuthRequest, res: Response
 
     const newSection = await Section.create({
       classId,
-      sectionName: sectionName.trim(),
+      sectionName,
       students: studentObjectIds,
       date: new Date(),
     });
@@ -85,6 +83,7 @@ export const createSection = asyncHandler(async (req: AuthRequest, res: Response
     });
   }
 });
+
 export const deleteSection = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { sectionId } = req.body;
   const userId = req.user!.id;
@@ -147,11 +146,10 @@ export const getMySections = asyncHandler(async (req: AuthRequest, res: Response
   // Transform sections to include className and relevant fields
   const sectionsWithDetails = sections.map((section: any) => ({
     _id: section._id,
-    sectionNumber: section.sectionNumber,
+    sectionName: section.sectionName,
     classId: section.classId._id,
     className: section.classId.name,
     date: section.date,
-    dayNumber: section.dayNumber,
     students: userRole === UserRole.STUDENT ? undefined : section.students, // Hide students for students
     createdAt: section.createdAt,
     updatedAt: section.updatedAt,
